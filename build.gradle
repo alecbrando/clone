@@ -25,7 +25,7 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-acl'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket:3.0.0'
-	implementation 'org.springframework.boot:spring-boot-starter-websocket-messaging:3.0.0'
+//	implementation 'org.springframework.boot:spring-boot-starter-websocket-messaging:3.0.0'
 }
 
 tasks.withType(KotlinCompile) {

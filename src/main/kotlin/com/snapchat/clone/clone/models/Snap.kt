@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
 
-@Document(collation = "Snap")
+@Document(collection = "Snap")
 data class Snap(
     @Id
     val id: String? = null,

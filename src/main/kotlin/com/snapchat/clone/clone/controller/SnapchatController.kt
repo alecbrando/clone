@@ -1,20 +1,27 @@
 package com.snapchat.clone.clone.controller
 
 import UserService
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.Gson
+import com.snapchat.clone.clone.models.Message
 import com.snapchat.clone.clone.models.Snap
 import com.snapchat.clone.clone.models.User
 import com.snapchat.clone.clone.models.Username
+import com.snapchat.clone.clone.repository.MessageRepository
 import com.snapchat.clone.clone.services.SnapService
-import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler
+import org.springframework.messaging.handler.annotation.MessageMapping
+import org.springframework.messaging.handler.annotation.Payload
+import org.springframework.messaging.handler.annotation.SendTo
+import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.util.HtmlUtils
+import java.util.*
 
 
 @RestController
-@RequestMapping("/api")
 class SnapchatController(
     private val userService: UserService,
     private val snapService: SnapService,
@@ -22,9 +29,27 @@ class SnapchatController(
 ) {
     private val log: Logger = LoggerFactory.getLogger(SnapchatController::class.java)
 
+    @Autowired
+    private lateinit var simpMessagingTemplate: SimpMessagingTemplate
+
+    @Autowired
+    private lateinit var messageRepository: MessageRepository
+
+    @MessageMapping("/sendMessage")
+    fun sendMessageToUser(json: String): Message {
+        val message = Gson().fromJson(json, Message::class.java)
+        log.info("Hello World")
+        // Create a new message object with the incoming message data
+        val messageToSave = Message(UUID.randomUUID().toString(), message.sender, message.recipient, message.text, timestamp = Date())
+        // Query the MongoDB collection for messages with the same sender and recipient
+        messageRepository.save(messageToSave)
+        simpMessagingTemplate.convertAndSendToUser(message.sender!!, "/person/${message.recipient}", message)
+        return messageToSave
+    }
+
     @PostMapping("/users")
-    fun createUser(@RequestBody user: User?): User {
-        return userService.createUser(user!!)
+    fun createUser(@RequestBody user: User): User {
+        return userService.createUser(user)
     }
 
     @GetMapping("/users/{username}")
@@ -35,7 +60,7 @@ class SnapchatController(
     @PostMapping("/users/{username}/friends")
     fun addFriend(@PathVariable username: String?, @RequestBody friendUsername: String): User {
         val name = gson.fromJson(friendUsername, Username::class.java)
-        log.info("inside of addFriend in Controller $name.friendUsername")
+        log.info("inside of addFriend in Controller ${name.friendUsername}")
         return userService.addFriend(username, name.friendUsername)
     }
 
@@ -49,3 +74,4 @@ class SnapchatController(
         return snapService.getSnaps(recipientId)
     }
 }
+
