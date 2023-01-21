@@ -1,27 +1,32 @@
 package com.snapchat.clone.clone.config
 
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.simp.config.MessageBrokerRegistry
-import org.springframework.web.socket.WebSocketMessage
-import org.springframework.web.socket.WebSocketSession
-import org.springframework.web.socket.config.annotation.EnableWebSocket
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer
-import org.springframework.web.socket.server.support.WebSocketHttpRequestHandler
+import org.springframework.web.socket.config.annotation.*
+import java.util.*
 
 
 @Configuration
-@EnableWebSocket
 @EnableWebSocketMessageBroker
 class WebSocketConfig : WebSocketMessageBrokerConfigurer {
-
+    private val log = LoggerFactory.getLogger(WebSocketConfig::class.java)
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {
-        registry.addEndpoint("/snap-app").setAllowedOrigins("*")
+        log.info("Registering STOMP endpoints")
+        registry.addEndpoint("/snap-app")
     }
 
-    override fun configureMessageBroker(registry: MessageBrokerRegistry) {
-        registry.enableSimpleBroker("/person")
+    override fun configureMessageBroker(config: MessageBrokerRegistry) {
+        log.info("Configuring message broker")
+        config.enableSimpleBroker("/topic")
+        config.setApplicationDestinationPrefixes("/app")
     }
-
 }
+
+//class ClientHandshakeHandler : DefaultHandshakeHandler() {
+//    private val logger: Logger = LoggerFactory.getLogger(ClientHandshakeHandler::class.java)
+//    override fun determineUser(req: ServerHttpRequest, weHandler: WebSocketHandler, attributes: Map<String, Any>): Principal? {
+//        val randId = UUID.randomUUID().toString()
+//        return UserPrincipal(randId)
+//    }
+//}

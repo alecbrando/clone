@@ -15,6 +15,7 @@ import java.util.*
 
 @SpringBootApplication()
 @EnableMongoRepositories
+@EnableWebSocket
 class CloneApplication {
 //	@Bean
 //	fun run(messageRepository: MessageRepository): CommandLineRunner {
