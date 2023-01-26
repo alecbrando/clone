@@ -2,23 +2,23 @@ package com.snapchat.clone.clone.controller
 
 import UserService
 import com.google.gson.Gson
-import com.snapchat.clone.clone.models.Message
-import com.snapchat.clone.clone.models.Snap
-import com.snapchat.clone.clone.models.User
-import com.snapchat.clone.clone.models.Username
+import com.snapchat.clone.clone.models.*
 import com.snapchat.clone.clone.repository.MessageRepository
 import com.snapchat.clone.clone.services.SnapService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
+import java.lang.IllegalArgumentException
 import java.util.*
 
 
-@Controller
+@RestController
 class SnapchatController(
         private val userService: UserService,
         private val snapService: SnapService,
@@ -32,19 +32,23 @@ class SnapchatController(
     @Autowired
     private lateinit var messageRepository: MessageRepository
 
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleAlreadyExists(e: IllegalArgumentException): ResponseEntity<String> = ResponseEntity(e.message, HttpStatus.BAD_REQUEST)
+
     @MessageMapping("/messages")
     fun sendMessageToUser(message: Message): Message {
         log.info("Hello World")
         // Create a new message object with the incoming message data
         val messageToSave = Message(UUID.randomUUID().toString(), message.sender, message.recipient, message.text, timestamp = Date())
-//         Query the MongoDB collection for messages with the same sender and recipient
+        // Query the MongoDB collection for messages with the same sender and recipient
         messageRepository.save(messageToSave)
         simpMessagingTemplate.convertAndSendToUser(message.sender ?: "", "/messages/${message.recipient}", message)
         return messageToSave
     }
 
     @PostMapping("/users")
-    fun createUser(@RequestBody user: User): User {
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createUser(@RequestBody user: User): TokenResponse {
         return userService.createUser(user)
     }
 
