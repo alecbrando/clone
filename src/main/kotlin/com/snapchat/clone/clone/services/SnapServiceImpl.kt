@@ -1,5 +1,7 @@
 package com.snapchat.clone.clone.services
 
+import com.snapchat.clone.clone.errors.UserNotFoundException
+import com.snapchat.clone.clone.errors.UserNotFriendException
 import com.snapchat.clone.clone.models.Snap
 import com.snapchat.clone.clone.models.User
 import com.snapchat.clone.clone.repository.SnapRepository
@@ -18,10 +20,10 @@ class SnapServiceImpl(
         val sender: User? = userRepository.findById(snap.id).orElse(null)
         val recipient: User? = userRepository.findById(snap.id).orElse(null)
         if (sender == null || recipient == null) {
-            throw IllegalArgumentException("Not Found")
+            throw UserNotFoundException("Not Found")
         }
         if (!sender.friends!!.contains(recipient.id)) {
-            throw IllegalArgumentException("")
+            throw UserNotFriendException("")
         }
         val snapWithIdAndDate = snap.copy(id = UUID.randomUUID().toString(), timestamp = Date())
         return snapRepository.save(snapWithIdAndDate)
